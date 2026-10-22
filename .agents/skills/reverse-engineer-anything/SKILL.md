@@ -117,6 +117,13 @@ explicit path or endpoint and do not need it.
   `inspect_android_package`, then focused Android tools when advertised.
   Archive member inventory still uses the archive route above.
 - Managed PE/CLI assembly: `inspect_managed_artifact`.
+- Headerless MIPS BIOS with a caller-known load/entry address: `open_binary`
+  with `format: "raw-binary"`, `architecture: "mipsel"`, `entry_point` and
+  `provider_id: "ghidra"`, when the connected server advertises that selection.
+  For a PS1 boot ROM, map file offset zero at `0xbfc00000`. Inspect
+  `inspect_native_load_image` before focused static analysis. This is a generic
+  little-endian MIPS32 instruction superset, not a PS1 runtime/GTE model; see
+  [native and artifact limits](references/native-and-artifacts.md).
 - Firmware image: `inspect_firmware_regions` when advertised. Use
   `extract_firmware` when extraction is requested, with a caller-selected new
   absolute output directory. These tools use caller-supplied Binwalk/Unblob on

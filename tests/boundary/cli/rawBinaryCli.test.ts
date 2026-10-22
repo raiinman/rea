@@ -70,6 +70,7 @@ cliTest(
 
 cliTest.for([
   ["arm64", "c0035fd6", "0x8000001", "must be 4-byte aligned"],
+  ["mipsel", "0800e00300000000", "0xbfc00002", "must be 4-byte aligned"],
   ["m68k", "4e75", "0x1001", "must be 2-byte aligned"],
 ] as const)(
   "rejects an unaligned %s entry before provider startup",
@@ -132,5 +133,35 @@ cliTest(
     expect(JSON.stringify(result.json)).not.toMatch(
       /unsupported binary format/i,
     );
+  },
+);
+
+cliTest(
+  "rejects an overflowing MIPS raw mapping before provider startup",
+  async ({ cli }) => {
+    const root = await createTestTempDirectory("rea-mipsel-cli-overflow-");
+    const path = join(root, "bios.bin");
+    await writeFile(path, Buffer.from("0800e00300000000", "hex"));
+    const result = await cli.run({
+      arguments: [
+        "inspect",
+        path,
+        "--target-format",
+        "raw-binary",
+        "--architecture",
+        "mipsel",
+        "--entry-point",
+        "0xfffffffc",
+        "--provider",
+        "ghidra",
+        "--json",
+      ],
+      environment: { HOME: root, XDG_CONFIG_HOME: root, XDG_CACHE_HOME: root },
+    });
+    expect(result.exitCode).toBe(1);
+    expect(result.json).toMatchObject({
+      code: "invalid_request",
+      details: { reason: expect.stringContaining("mipsel address width") },
+    });
   },
 );

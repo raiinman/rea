@@ -3,6 +3,8 @@
 This guide describes repository main. npm 4.1.0 includes the Windows
 native bundle; check the [release boundary](installation.md#released-package-and-main)
 before applying these instructions to an older published package.
+Raw `mipsel` admission is a raiinman fork extension requiring a build that
+contains it; it is not supplied by updating skill instructions alone.
 Native x86 (32-bit) PE support is available on repository main; npm releases
 through 5.0.0 admit x86-64 PE targets on Windows.
 
@@ -18,15 +20,17 @@ additional permission flag or degraded mode is required.
 - an operator-installed Ghidra 12.1.x distribution (verified with 12.1.4);
 - a 64-bit full JDK inside that installation's declared Java range (JDK 21 or newer, with no maximum, for current 12.1 releases);
 - an explicit native, non-managed x86, x86-64, ARMNT (Thumb-2) or ARM64 PE application/DLL, or a
-  [raw NMOS 6502 image](raw-binary.md#nmos-6502) with a caller-supplied entry; and
+  [raw NMOS 6502 image](raw-binary.md#nmos-6502) or
+  [raw little-endian MIPS image](raw-binary.md#little-endian-mips-bios-images)
+  with a caller-supplied entry; and
 - the 26 read-only Ghidra inventory, memory, and function-analysis operations.
 
 Loaded memory reads and file offsets preserve Ghidra's observed source mappings.
 PE load-image inspection returns an explicit unsupported attestation status.
 Independent verification covers admitted DOS MZ, explicit COM, and explicit
 [raw-binary imports](raw-binary.md) on their supported hosts, including the
-admitted raw NMOS 6502 mapping on Windows. Windows P0 admission remains limited
-to native PE and raw NMOS 6502 images. For x64 PE
+admitted raw NMOS 6502 and mipsel mappings on Windows. Windows P0 admission remains limited
+to native PE and raw NMOS 6502/mipsel images. For x64 PE
 NativeAOT RTR 9.1, the read-only snapshot parser can report metadata through
 `inspect_native_load_image` and `inspect_native_data_type` without a JAR or
 database mutation: MethodTable relationships, virtual slots and frozen strings.
@@ -44,6 +48,13 @@ requirements. The complete image must fit in the 16-bit address space; no
 console-specific cartridge loader, CPU variant, or bank-switching model is
 implied. Run `npm run verify:ghidra:6502` with caller-installed `ca65`/`ld65`
 to check the source-built fixture through real CLI and MCP workflows.
+
+Raw `mipsel` imports use the same immutable snapshot, native filesystem and
+process ownership controls. The complete file must fit in a 32-bit mapping
+with a 4-byte-aligned entry. This lane selects Ghidra's generic little-endian
+MIPS32 instruction superset; it supplies static analysis, not a PS1 machine
+model, GTE implementation or proof of R3000A instruction fidelity. See the
+[BIOS workflow and limits](raw-binary.md#little-endian-mips-bios-images).
 
 REA does not install or upgrade Ghidra, Java, Python, npm, Node.js, Hopper, or a
 compiler. The adapter uses the packaged Java `HeadlessScript`; Python and

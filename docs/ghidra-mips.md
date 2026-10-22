@@ -151,7 +151,10 @@ MIPS header and ABI record facts are committed in the analysis profile so
 interpretation changes invalidate profile-bound snapshots. The support-lane
 identity is versioned independently of file identity. Evidence, lifecycle
 outputs and saved snapshots preserve the `mips` family. Hopper and IDA adapters
-do not implicitly gain MIPS support. Windows Ghidra P0 does not admit MIPS targets.
+do not implicitly gain MIPS support. Windows Ghidra P0 does not admit these MIPS
+ELF targets. Explicit headerless little-endian images use the separate
+[`mipsel` raw-binary lane](raw-binary.md#little-endian-mips-bios-images), including
+on Windows; it does not infer ELF ABI declarations or PSP semantics.
 
 ### Soft-float prototype
 

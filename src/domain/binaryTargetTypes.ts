@@ -8,6 +8,7 @@ export const BINARY_ARCHITECTURES = [
   "arm64",
   "arm64_32",
   "mips",
+  "mipsel",
   "6502",
   "riscv",
   "powerpc",
@@ -21,6 +22,7 @@ export type BinaryArchitecture = (typeof BINARY_ARCHITECTURES)[number];
  * never yields them, so detected targets and Evidence subjects exclude them.
  */
 export const RAW_ONLY_ARCHITECTURES = [
+  "mipsel",
   "6502",
   "m68k",
 ] as const satisfies readonly BinaryArchitecture[];

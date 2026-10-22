@@ -13,11 +13,19 @@ export interface GhidraRawBinaryLanguage {
  * not evidence of the target's original compiler. Each family has one fixed
  * byte order: m68k is big-endian and the others are little-endian. Big-endian
  * ARM, Thumb-only, Cortex-M, and other processor variants are out of scope.
+ * mipsel selects the generic MIPS32 superset for MIPS-I firmware inspection;
+ * it does not establish an exact R3000A/PlayStation processor model or ABI.
  */
 export const ghidraRawBinaryLanguage = (
   architecture: RawBinaryAdmission["architecture"],
 ): GhidraRawBinaryLanguage => {
   switch (architecture) {
+    case "mipsel":
+      return {
+        languageId: "MIPS:LE:32:default",
+        compilerSpecId: "default",
+        defaultAddressSpace: "ram",
+      };
     case "6502":
       return {
         languageId: "6502:LE:16:default",

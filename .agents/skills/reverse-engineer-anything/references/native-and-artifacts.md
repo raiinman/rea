@@ -441,7 +441,7 @@ Use `inspect_byte_entropy` to triage high- and low-entropy ranges before extract
 
 For other headerless images (embedded firmware without ELF/Mach-O/PE/MZ
 headers), open with `format: "raw-binary"`, `architecture` (`x86`, `x86_64`,
-`arm`, `arm64`, `6502`, or `m68k`), and `entry_point` (`0x` hex). File offset 0 is mapped at
+`arm`, `arm64`, `6502`, `m68k`, or `mipsel`), and `entry_point` (`0x` hex). File offset 0 is mapped at
 that address. Hopper and IDA refuse this interpretation; Ghidra uses
 `BinaryLoader` with a generic language: big-endian for `m68k`, little-endian
 otherwise. Big-endian ARM, Thumb-only, and Cortex-M variants are unsupported.
@@ -449,7 +449,13 @@ otherwise. Big-endian ARM, Thumb-only, and Cortex-M variants are unsupported.
 `0x0000..0xffff`. 65C02, 65816, cartridge containers, bank switching, and mapper
 semantics are unsupported. `m68k` requires an even entry and decodes the 68040
 superset of the 68000 family; Amiga/Atari containers and vector-table entry
-discovery are unsupported. Windows Ghidra P0 admits raw images only for `6502`. See [raw binary guide](https://github.com/morluto/rea/blob/main/docs/raw-binary.md).
+discovery are unsupported. `mipsel` requires a 4-byte-aligned entry and complete
+32-bit mapping, and selects `MIPS:LE:32:default`; its instruction superset does
+not establish MIPS-I/R3000A or GTE conformance. A caller-identified PS1 boot ROM
+can be mapped at `0xbfc00000`, with file offset zero as its entry. ROM aliases,
+RAM, MMIO, copied code and exact load/branch delay execution remain unmodeled.
+Windows Ghidra P0 admits raw images only for `6502` and `mipsel`.
+See the fork's [raw binary guide](https://github.com/raiinman/rea/blob/main/docs/raw-binary.md).
 
 ### Function annotations in Ghidra
 

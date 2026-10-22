@@ -407,6 +407,45 @@ describe("Ghidra provider", () => {
 });
 
 describe("Ghidra raw-binary profile", () => {
+  it("binds raw little-endian MIPS at the caller reset alias on Windows without mutation authority", async () => {
+    const ghidra = provider(installationHost("win32"));
+    const target: BinaryTarget = {
+      path: "/tmp/bios.bin",
+      sha256: "a".repeat(64),
+      kind: "executable",
+      format: "raw-binary",
+      architecture: "mipsel",
+      availableArchitectures: ["mipsel"],
+      entryPoint: "0xbfc00000",
+      entryPointSource: "0xBFC00000",
+    };
+    expect(ghidra.inspectTargetSupport(target).status).toBe("supported");
+    const resolved = await ghidra.resolveAnalysisProfile(target);
+    if (!resolved.ok) throw resolved.error;
+    expect(resolved.value.profile?.parameters).toMatchObject({
+      architecture: "mipsel",
+      loader: "BinaryLoader",
+      language_id: "MIPS:LE:32:default",
+      compiler_spec_id: "default",
+      entry_point: "0xbfc00000",
+      language_selection: "caller-supplied-v1",
+      load_image_evidence: "independent-raw-mapping-context-v4",
+    });
+    const shifted = await ghidra.resolveAnalysisProfile({
+      ...target,
+      entryPoint: "0x1fc00000",
+      entryPointSource: "0x1fc00000",
+    });
+    if (!shifted.ok) throw shifted.error;
+    expect(shifted.value.profile?.digest).not.toBe(
+      resolved.value.profile?.digest,
+    );
+    expect(
+      ghidra
+        .capabilities()
+        .some(({ available, effects }) => available && effects.mutatesArtifact),
+    ).toBe(false);
+  });
   it("admits raw 6502 on Windows and binds its 16-bit language without mutation authority", async () => {
     const ghidra = provider(installationHost("win32"));
     const target: BinaryTarget = {
