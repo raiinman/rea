@@ -131,7 +131,7 @@ describe("raw-binary admission", () => {
       }).ok,
     ).toBe(true);
   });
-  it.each(["arm", "arm64"])(
+  it.each(["arm", "arm64", "mipsel"])(
     "rejects unaligned %s entries before provider selection",
     (architecture) => {
       for (const entryPoint of ["0x8000001", "0x8000002", "0x8000003"]) {
@@ -249,4 +249,58 @@ describe("raw-binary selection pairing", () => {
       rawBinarySelectionError({ format: "dos-com", architecture: "x86" }),
     ).toBe("architecture and entry_point apply only with format=raw-binary");
   });
+});
+
+describe("MIPS little-endian raw-binary admission", () => {
+  it("preserves an explicit PS1 reset alias without inferring a physical mirror", () => {
+    expect(
+      admitRawBinary({
+        architecture: "mipsel",
+        entryPoint: "0xBFC00000",
+        fileBytes: 524288,
+      }),
+    ).toEqual({
+      ok: true,
+      value: {
+        architecture: "mipsel",
+        entryPoint: "0xbfc00000",
+        entryPointSource: "0xBFC00000",
+      },
+    });
+  });
+  it("admits a complete final instruction at the 32-bit boundary", () => {
+    expect(
+      admitRawBinary({
+        architecture: "mipsel",
+        entryPoint: "0xfffffffc",
+        fileBytes: 4,
+      }).ok,
+    ).toBe(true);
+  });
+  it.each([
+    ["0xfffffffc", 5],
+    ["0x100000000", 4],
+  ])(
+    "rejects a MIPS mapping at %s with %i bytes beyond 32 bits",
+    (entryPoint, fileBytes) => {
+      expect(
+        admitRawBinary({ architecture: "mipsel", entryPoint, fileBytes }),
+      ).toEqual({
+        ok: false,
+        error: {
+          reason: `raw-binary mapping from ${entryPoint} must fit in the mipsel address width`,
+          constraint: "load_selection_rejected",
+        },
+      });
+    },
+  );
+  it.each(["mips", "mipsbe", "r3000", "ps1"])(
+    "does not silently interpret ambiguous architecture %s",
+    (architecture) => {
+      expect(
+        admitRawBinary({ architecture, entryPoint: "0xbfc00000", fileBytes: 4 })
+          .ok,
+      ).toBe(false);
+    },
+  );
 });

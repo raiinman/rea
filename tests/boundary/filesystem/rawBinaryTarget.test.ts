@@ -140,3 +140,30 @@ describe("raw-binary admission", () => {
     ).toMatchObject({ ok: false, error: { _tag: "BinaryTargetError" } });
   });
 });
+
+it("uses only the explicit little-endian MIPS mapping and leaves BIOS bytes unchanged", async () => {
+  const directory = await createTestTempDirectory("rea-mipsel-raw-target-");
+  const path = join(directory, "bios.bin");
+  const bytes = Buffer.from("0800e00300000000", "hex");
+  await writeFile(path, bytes);
+  const target = await parseBinaryTarget(path, {
+    cwd: directory,
+    formatHint: "raw-binary",
+    architecture: "mipsel",
+    entryPoint: "0xBFC00000",
+  });
+  expect(target).toMatchObject({
+    ok: true,
+    value: {
+      format: "raw-binary",
+      architecture: "mipsel",
+      availableArchitectures: ["mipsel"],
+      entryPoint: "0xbfc00000",
+      entryPointSource: "0xBFC00000",
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+    },
+  });
+  const detected = await parseBinaryTarget(path);
+  expect(detected.ok && detected.value.format).not.toBe("raw-binary");
+  expect(await readFile(path)).toEqual(bytes);
+});

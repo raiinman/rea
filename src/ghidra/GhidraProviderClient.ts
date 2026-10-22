@@ -316,11 +316,18 @@ export const createGhidraProviderClient = (input: {
     ...(target.format === "raw-binary"
       ? [
           "Headerless raw-binary analysis uses the caller-supplied architecture and entry address; file offset 0 is mapped at that address. Headers are not discovered from file bytes.",
-          "Little-endian generic Ghidra languages are used for x86, x86_64, arm, arm64, and NMOS 6502; m68k uses the big-endian 68000 default language, which decodes the 68040 superset. Big-endian ARM, Thumb-only, Cortex-M, 65C02, 65816, separate 68020/68030/CPU32/ColdFire variants, and other processor variants are unsupported in this increment.",
+          "Little-endian generic Ghidra languages are used for x86, x86_64, arm, arm64, NMOS 6502, and mipsel; m68k uses the big-endian 68000 default language, which decodes the 68040 superset. Big-endian ARM/MIPS raw loads, Thumb-only, Cortex-M, 65C02, 65816, separate 68020/68030/CPU32/ColdFire variants, and other processor variants are unsupported in this increment.",
           "Static analysis does not emulate reset vectors, memory-mapped I/O, or firmware boot sequences.",
         ]
       : []),
     ...(target.architecture === "mips" ? (target.mips.limitations ?? []) : []),
+    ...(target.format === "raw-binary" && target.architecture === "mipsel"
+      ? [
+          "Raw mipsel uses Ghidra's generic little-endian MIPS32 language, a superset of MIPS-I. Successful decoding does not establish exact R3000A or PlayStation instruction semantics; PS1 GTE/COP2 behavior, load delays, caches, bus timing and hardware devices are not modeled by this lane.",
+          "The raw image declares no ABI. Ghidra's default compiler specification is an analysis convention; register storage, calling conventions and decompiled types must be verified independently.",
+          "Only the caller-selected contiguous file mapping is imported. PS1 RAM, scratchpad, hardware registers and KSEG aliases are not synthesized; copied code, unmapped references and indirect control flow can remain unresolved.",
+        ]
+      : []),
     ...(committedProfile.parameters.mips_abi_basis ===
     "inferred-o32-assumption-v1"
       ? [

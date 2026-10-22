@@ -16,6 +16,7 @@ export const BINARY_ARCHITECTURES = [
   "arm64",
   "6502",
   "m68k",
+  "mipsel",
 ] as const satisfies readonly BinaryArchitecture[];
 
 /** Provider-neutral CPU family for a caller-supplied raw-binary load. */
@@ -81,7 +82,8 @@ const addressWidth = (architecture: BinaryArchitecture): bigint =>
     ? 0xffffn
     : architecture === "x86" ||
         architecture === "arm" ||
-        architecture === "m68k"
+        architecture === "m68k" ||
+        architecture === "mipsel"
       ? 0xffffffffn
       : 0xffffffffffffffffn;
 
@@ -95,7 +97,7 @@ export const admitRawBinary = (input: {
   if (!architecture.success)
     return err({
       reason:
-        "raw-binary format requires architecture (x86, x86_64, arm, arm64, 6502, or m68k)",
+        "raw-binary format requires architecture (x86, x86_64, arm, arm64, 6502, m68k, or mipsel)",
       constraint: "load_selection_rejected",
     });
   if (typeof input.entryPoint !== "string")
@@ -111,7 +113,9 @@ export const admitRawBinary = (input: {
       constraint: "load_selection_rejected",
     });
   if (
-    (architecture.data === "arm" || architecture.data === "arm64") &&
+    (architecture.data === "arm" ||
+      architecture.data === "arm64" ||
+      architecture.data === "mipsel") &&
     entry.value.value % 4n !== 0n
   )
     return err({

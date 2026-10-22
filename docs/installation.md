@@ -490,6 +490,14 @@ selects the npm release, and persistent MCP registrations are pinned to the
 version that performed setup. Installing newer instructions does not update a
 running server or its registration.
 
+The raiinman fork adds an explicit raw `mipsel` Ghidra import, including the
+Windows static-analysis lane. Use a built checkout or package containing that
+fork change and point the CLI/MCP registration at it. The ordinary upstream
+`rea-agents@latest` command does not select a GitHub fork. Keep the matching
+Windows native addon and bundled skill with the runtime, then restart the MCP
+client after changing its registration; see the
+[raw BIOS guide](raw-binary.md#little-endian-mips-bios-images).
+
 The npm release checked on **2026-10-11** was **6.4.0**, published from
 [`a56f7bb6`](https://github.com/morluto/rea/commit/a56f7bb668ab23fec8d33f7af353ac7ed2fe1895).
 The actual registry package accepted dry-run setup plans for the 17 client IDs
@@ -925,7 +933,8 @@ session metadata edits leave executable bytes unchanged and are discarded on clo
 require Hopper; Windows P0 remains read-only.
 
 Windows P0 admits native x86, x86-64, ARMNT (Thumb-2) and ARM64 PE applications and DLLs, plus explicitly
-selected [raw NMOS 6502 images](raw-binary.md#nmos-6502) with a caller-supplied
+selected [raw NMOS 6502 images](raw-binary.md#nmos-6502) and
+[raw little-endian MIPS images](raw-binary.md#little-endian-mips-bios-images) with a caller-supplied
 entry at file offset 0, on fixed local NTFS volumes. Other raw CPU families remain
 unsupported on Windows.
 The npm package bundles native Job Object ownership, protected private runtime

@@ -163,6 +163,13 @@ export const resolveGhidraAnalysisProfile = async (
           language_selection: "caller-supplied-v1",
           entry_point: target.entryPoint,
           entry_seed: "external-entry-and-function-before-analysis-v1",
+          ...(target.architecture === "mipsel"
+            ? {
+                raw_mips_support_lane: "generic-mips32-le-static-v1",
+                raw_mips_isa_basis: "caller-selected-mips32-superset-v1",
+                raw_mips_abi_basis: "ghidra-default-analysis-convention-v1",
+              }
+            : {}),
           ...analyzerParameters,
         }),
       }),

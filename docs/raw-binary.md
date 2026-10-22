@@ -1,5 +1,9 @@
 # Headerless raw-binary analysis with Ghidra
 
+The `mipsel` extension described here is in the raiinman fork. Use a build of
+this fork containing the change; installing the upstream npm release or only
+updating the skill does not add this architecture to an older server.
+
 REA admits a headerless executable when the caller supplies the CPU family and
 the address where file offset 0 should be mapped. That interpretation is not
 inferred from a `.bin` suffix or from unrecognized bytes.
@@ -25,14 +29,14 @@ rea inspect-native-load-image /absolute/path/to/ecu.bin --target-format raw-bina
 }
 ```
 
-`architecture` is one of `x86`, `x86_64`, `arm`, `arm64`, `6502`, or `m68k`. `entry_point` is a
+`architecture` is one of `x86`, `x86_64`, `arm`, `arm64`, `6502`, `m68k`, or `mipsel`. `entry_point` is a
 hexadecimal address of the form `0x…`. The complete file is mapped starting at
 that address, and Ghidra seeds an `entry` function there before auto-analysis.
-ARM and AArch64 entries must be 4-byte aligned; m68k entries must be 2-byte
+ARM, AArch64 and mipsel entries must be 4-byte aligned; m68k entries must be 2-byte
 aligned; x86 and 6502 entries may be byte-aligned.
 For 6502, the entry and complete mapped file must fit within `0x0000..0xffff`;
 images that cross the 16-bit boundary are rejected before provider startup.
-For m68k, the mapping must fit within `0x0..0xffffffff`.
+For m68k and mipsel, the mapping must fit within `0x0..0xffffffff`.
 `open_binary` and an open `binary_session` return the canonical `entry_point`
 for raw targets so callers can verify the selected mapping directly.
 Omitted `format` keeps header-based detection; architecture and entry without
@@ -50,6 +54,7 @@ m68k is big-endian and the others are little-endian.
 | arm64        | `AARCH64:LE:64:v8A`   | `default`        |
 | 6502         | `6502:LE:16:default`  | `default`        |
 | m68k         | `68000:BE:32:default` | `default`        |
+| mipsel       | `MIPS:LE:32:default`  | `default`        |
 
 Compiler specifications select analysis conventions; they do not identify the
 original compiler or ABI of a headerless target. Ghidra's x86 languages do not
@@ -75,7 +80,7 @@ non-overlay in the bound language's default address space. Contradictory mapping
 observations are retained with `mismatch`, even when the source hashes agree.
 
 Hopper and IDA refuse raw-binary targets. Windows Ghidra P0 admits native PE
-applications/DLLs and explicitly selected raw 6502 images. Other raw CPU families
+applications/DLLs and explicitly selected raw 6502 and mipsel images. Other raw CPU families
 remain outside the Windows boundary. Native path admission, private DACLs, Job
 Object ownership, immutable snapshots, and the no-mutation policy still apply.
 
@@ -137,6 +142,68 @@ CLI/MCP load-image parity, mapped bytes, a decoded call, decompilation by addres
 and file offset, misaligned and out-of-range mappings, unchanged source bytes and
 runtime cleanup. It has been run with Ghidra 12.1.4 on macOS; Linux has not been
 exercised.
+
+## Little-endian MIPS BIOS images
+
+The fork's `mipsel` selection is a headerless, little-endian 32-bit MIPS
+interpretation, distinct from header-detected `mips` ELF support. It uses
+Ghidra's generic `MIPS:LE:32:default` instruction superset and default compiler
+specification. It does not prove MIPS-I or PlayStation R3000A conformance,
+recover the original ABI, or reject every instruction unavailable on that CPU.
+Big-endian raw MIPS, MIPS16, microMIPS and Allegrex are not selected by this lane.
+
+For a caller-identified PS1 boot ROM whose reset entry is at file offset zero,
+map the image at `0xbfc00000`:
+
+```powershell
+rea function "C:\images\ps1-bios.bin" 0xbfc00000 --target-format raw-binary --architecture mipsel --entry-point 0xbfc00000 --provider ghidra --json
+rea inspect-native-load-image "C:\images\ps1-bios.bin" --target-format raw-binary --architecture mipsel --entry-point 0xbfc00000 --provider ghidra --json
+```
+
+The equivalent MCP open is:
+
+```json
+{
+  "name": "open_binary",
+  "arguments": {
+    "path": "C:/images/ps1-bios.bin",
+    "format": "raw-binary",
+    "architecture": "mipsel",
+    "entry_point": "0xbfc00000",
+    "provider_id": "ghidra"
+  }
+}
+```
+
+Inspect the returned load-image checks before relying on addresses. File offset
+zero and the initial function entry share the caller-selected address; there
+is no independent load-base/reset-entry setting. Physical, cached and uncached
+ROM aliases are not created. RAM, scratchpad, MMIO, DMA, GPU, SPU, CD-ROM and
+COP2/GTE behavior are not modeled. Code copied to RAM or reached through another
+alias may remain unresolved. Static instruction and pseudocode results do not
+establish execution, exact load/branch delay behavior, or boot completion.
+Original BIOS bytes remain unchanged; do not commit private BIOS images or
+provider project files as fixtures.
+
+A source-build MCP verification on Windows x64 with Ghidra 12.1.4,
+JDK 21.0.12.1 and Node.js 24.18 opened a caller-supplied 512-KiB PS1 BIOS
+at `0xbfc00000`. Its complete raw mapping passed independent verification;
+the first 64 mapped bytes matched the source, the first instruction decoded
+as `LUI`, and address `0xbfc00030` mapped to file offset 48. Reset-entry
+decompilation returned 2,655 characters; inventory reported 328 functions and
+106 defined strings. The original digest remained unchanged, and closing the
+session left no pending runtime and an empty private runtime directory.
+The completed workflow took about 172 seconds including cold startup and
+concurrent test contention; this is a single observation, not a performance
+comparison. It establishes this source-build MCP workflow, not installed-package
+verification, complete BIOS reconstruction or runtime semantic equivalence.
+
+Debian MIPS disk images are unnecessary for this static workflow. The
+[Debian QEMU image archive](https://people.debian.org/~aurel32/qemu/mips/)
+contains old Linux/Malta images, and the
+[QEMU MIPS system guide](https://www.qemu.org/docs/master/system/target-mips.html)
+describes boards such as Malta, Pica and Magnum. Those board/device models do
+not supply a PS1 machine model or establish BIOS runtime behavior.
 
 ## Limitations
 

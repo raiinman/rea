@@ -705,7 +705,8 @@ Install a Ghidra 12.1.x release and the 64-bit full JDK it declares, then config
 use them. Ghidra analysis supports Linux x64/arm64 and macOS x64/arm64; each installation requires
 the matching native decompiler. Experimental Windows x64 P0 admits native
 x86, x86-64, ARMNT (Thumb-2) and ARM64 PE applications and DLLs, plus explicitly selected
-[raw NMOS 6502 images](raw-binary.md#nmos-6502) with a caller-supplied load address,
+[raw NMOS 6502 images](raw-binary.md#nmos-6502) and
+[raw little-endian MIPS images](raw-binary.md#little-endian-mips-bios-images) with a caller-supplied load address,
 on fixed local NTFS volumes. Other raw CPU families remain unsupported on Windows.
 The boundary uses bundled Job Object ownership, protected runtime DACLs, and
 handle-based path admission. See [Windows Ghidra P0](windows-ghidra-p0.md) and
